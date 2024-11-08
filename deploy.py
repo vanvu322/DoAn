@@ -1,5 +1,6 @@
 from decimal import InvalidContext
 import torch
+import sys
 from torch._C import DeserializationStorageContext
 from torchvision import transforms
 import pickle
@@ -8,7 +9,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tenseal as ts
 from typing import Dict
+import time
 
+
+
+start_time = time.time()
 ##################
 # Client Helpers #
 ##################
@@ -32,13 +37,18 @@ def load_input(image_path):
     ])
     img = Image.open(image_path).convert("L")
     img_tensor = transform(img).view(36,36).tolist()
+    tensor_size = sys.getsizeof(pickle.dumps(img_tensor))  # pickle để đo kích thước
+    print(f"Kích thước ảnh trước khi mã hóa: {tensor_size} bytes")
     return img_tensor, img
 
 # Helper for encoding the image
 def prepare_input(ctx, plain_input):
     enc_input, windows_nb = ts.im2col_encoding(ctx, plain_input, 4, 4, 4)
-    print(f"Số lượng cửa sổ con: {windows_nb}")
     assert windows_nb == 81
+    
+    enc_input_serialized = enc_input.serialize()
+    enc_size = sys.getsizeof(enc_input_serialized)  # Đổi sang KB
+    print(f"Kích thước ảnh sau khi mã hóa (CKKSVector): {enc_size} bytes")
     return enc_input
 
 ################
@@ -167,3 +177,6 @@ probs = torch.softmax(torch.tensor(result), dim=0)
 predicted_class = torch.argmax(probs).item()
 
 print(f"Predicted class: {predicted_class}, Probabilities: {probs.tolist()}")
+end_time = time.time()
+total_time = end_time - start_time
+print("Total execution time:", total_time, "seconds")
