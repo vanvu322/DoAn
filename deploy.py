@@ -165,10 +165,10 @@ server_response = {
 ###########################
 # Decrypt the result on client side
 result = ts.ckks_vector_from(context, encrypted_result).decrypt()
-print(result)
+
 
 result = ts.ckks_vector_from(context, encrypted_result).decrypt()
-print(result)
+
 
 # Sử dụng softmax để chuyển đổi đầu ra thành xác suất
 probs = torch.softmax(torch.tensor(result), dim=0)
